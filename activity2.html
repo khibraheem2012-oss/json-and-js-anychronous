@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Package Delivery Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    h2 { color: #333; }
+    .tracker-card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      border-left: 5px solid #007bff;
+    }
+    .status-transit { border-left-color: #ffc107; }
+    .status-delivered { border-left-color: #28a745; }
+    .status-shipping { border-left-color: #17a2b8; }
+    
+    .tracking-id { font-size: 0.85em; color: #6c757d; }
+    .status-badge {
+      font-weight: bold;
+      float: right;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: white;
+    }
+    .bg-transit { background-color: #ffc107; color: #333; }
+    .bg-delivered { background-color: #28a745; }
+    .bg-shipping { background-color: #17a2b8; }
+    
+    #loading { font-style: italic; color: #666; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h2>📦 Live Delivery Tracker</h2>
+  <div id="loading">🔍 Searching for active shipments...</div>
+  <div id="tracker-container"></div>
+
+  <script>
+    // Simulated asynchronous API fetch using JSON data and a Promise timeout
+    const fetchTrackingDataAsync = () => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const jsonResponse = `[
+            {
+              "trackingNumber": "TRK-9842-US",
+              "item": "Wireless Headphones",
+              "status": "In Transit",
+              "estimatedDelivery": "Oct 22, 2026",
+              "location": "Regional Sorting Facility"
+            },
+            {
+              "trackingNumber": "TRK-3310-US",
+              "item": "Mechanical Keyboard",
+              "status": "Out for Delivery",
+              "estimatedDelivery": "Today, 3:00 PM",
+              "location": "Local Delivery Van"
+            },
+            {
+              "trackingNumber": "TRK-1102-US",
+              "item": "Gaming Mouse",
+              "status": "Delivered",
+              "estimatedDelivery": "Delivered Yesterday",
+              "location": "Front Porch"
+            }
+          ]`;
+          
+          // Parse JSON string into a JavaScript array
+          resolve(JSON.parse(jsonResponse));
+        }, 1200); // 1.2 second delay simulating network latency
+      });
+    };
+
+    // Main Asynchronous Function to load and render the tracker
+    async function loadTracker() {
+      const loadingDiv = document.getElementById('loading');
+      const container = document.getElementById('tracker-container');
+
+      try {
+        // Await the asynchronous response data
+        const shipments = await fetchTrackingDataAsync();
+        
+        // Clear the loading indicator
+        loadingDiv.style.display = 'none';
+
+        // Loop through JSON shipment data and create DOM cards
+        shipments.forEach(shipment => {
+          const card = document.createElement('div');
+          
+          // Determine status styles
+          let statusClass = "status-transit";
+          let badgeClass = "bg-transit";
+          if (shipment.status === "Delivered") {
+            statusClass = "status-delivered";
+            badgeClass = "bg-delivered";
+          } else if (shipment.status === "Out for Delivery") {
+            statusClass = "status-shipping";
+            badgeClass = "bg-shipping";
+          }
+
+          card.className = `tracker-card ${statusClass}`;
+
+          card.innerHTML = `
+            <span class="status-badge ${badgeClass}">${shipment.status}</span>
+            <h3>${shipment.item}</h3>
+            <div class="tracking-id">Tracking ID: ${shipment.trackingNumber}</div>
+            <p style="margin: 10px 0 5px 0;">📍 <strong>Current Location:</strong> ${shipment.location}</p>
+            <p style="margin: 0; font-size: 0.9em; color: #555;">📅 <strong>Expected:</strong> ${shipment.estimatedDelivery}</p>
+          `;
+
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        loadingDiv.textContent = "❌ Failed to retrieve tracking updates.";
+        console.error("Error loading tracker data:", error);
+      }
+    }
+
+    // Execute the async function
+    loadTracker();
+  </script>
+
+</body>
+</html>
